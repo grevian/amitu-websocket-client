@@ -19,6 +19,7 @@ class WebSocket(Thread):
         protocol=None, timeout=None
     ):
         Thread.__init__(self)
+        self.is_ready = False
         self.url = url
         self.ca_certs = ca_certs
         self.cert_reqs = cert_reqs
@@ -105,6 +106,7 @@ class WebSocket(Thread):
 
         self.onopen()
 
+        self.is_ready = True
         while True:
             if self.stopped():
                 return
@@ -121,6 +123,8 @@ class WebSocket(Thread):
     def send(self, data):
         self.sock.send('\x00' + unicode(data).encode("utf-8") + '\xff')
 
+    def ready(self):
+        return self.is_ready
     def stop(self):
         self.is_stopped = True
 
