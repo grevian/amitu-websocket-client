@@ -121,6 +121,7 @@ def parse_message(raw):
 
 class SocketIOClient(amitu.websocket_client.WebSocket):
     def __init__(self, server, port, protocol="ws", *args, **kw):
+        amitu.websocket_client.WebSocket.__init__(self, "")
         self.server = server
         self.port = port
         self.args = args
@@ -138,8 +139,7 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
                 self.protocol, self.server, self.port, hskey
             ), *self.args, **self.kw
         )
-        while True:
-            super(SocketIOClient, self).run()
+        super(SocketIOClient, self).run()
 
     def on(self, name, callback):
         self.handlers.setdefault(name, []).append(callback)

@@ -1,6 +1,7 @@
 import ssl, socket, urlparse
 from mimetools import Message
 from StringIO import StringIO
+from threading import Thread
 
 FRAME_START = "\x00"
 FRAME_END = "\xff"
@@ -12,11 +13,12 @@ class WebSocketError(Exception):
     def __str__(self): return str(self.value)
 
 
-class WebSocket(object):
+class WebSocket(Thread):
     def __init__(
         self, url, ca_certs=None, cert_reqs=ssl.CERT_NONE, headers=None,
         protocol=None, timeout=None
     ):
+        Thread.__init__(self)
         self.url = url
         self.ca_certs = ca_certs
         self.cert_reqs = cert_reqs
@@ -97,12 +99,15 @@ class WebSocket(object):
         return buf
 
     def run(self):
+        self.is_stopped = False
         self._connect_and_send_handshake()
         buf = self._receive_handshake()
 
         self.onopen()
 
         while True:
+            if self.stopped():
+                return
             buf = self._consume_frames(buf)
 
             try:
@@ -115,6 +120,12 @@ class WebSocket(object):
 
     def send(self, data):
         self.sock.send('\x00' + unicode(data).encode("utf-8") + '\xff')
+
+    def stop(self):
+        self.is_stopped = True
+
+    def stopped(self):
+        return self.is_stopped
 
     def onopen(self): pass
     def onmessage(self, message): pass
